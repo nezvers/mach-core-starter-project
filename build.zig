@@ -20,14 +20,39 @@ pub fn build(b: *std.Build) !void {
         .target = target,
         .optimize = optimize,
     });
+
+    // const asset_lib = b.addStaticLibrary(.{
+    //     .name = "assets",
+    //     // In this case the main source file is merely a path, however, in more
+    //     // complicated build scripts, this could be a generated file.
+    //     .root_source_file = .{ .path = "assets/assets.zig" },
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
+    // b.installArtifact(asset_lib);
+
+    const zigimg_dep = b.dependency("zigimg", .{
+        .target = target,
+        .optimize = optimize,
+    }).module("zigimg");
+
     const app = try mach_core.App.init(b, mach_core_dep.builder, .{
         .name = "myapp",
         .src = "src/main.zig",
         .target = target,
         .optimize = optimize,
-        .deps = &[_]std.Build.Module.Import{},
+        .deps = &[_]std.Build.Module.Import{.{
+            .module = zigimg_dep,
+            .name = "zigimg",
+        }},
     });
+
     if (b.args) |args| app.run.addArgs(args);
+
+    // app.compile.root_module.addImport("zigimg", b.dependency("zigimg", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // }).module("zigimg"));
 
     // This creates a build step. It will be visible in the `zig build --help` menu,
     // and can be selected like this: `zig build run`
